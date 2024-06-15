@@ -1,0 +1,52 @@
+
+    $("#example2").DataTable({
+      select: true,
+      dom: "Bfrtip",
+      buttons: [
+        {
+          extend: "excelHtml5",
+          customize: function (xlsx) {
+            var sheet = xlsx.xl.worksheets["sheet1.xml"];
+            var $sheet = $(sheet);
+
+            // Generate the XML for the second header row
+            var secondHeaderRow = $("#mytble thead tr").eq(0);
+            var newHeaderXML = "";
+
+            var rowXML = '<row r="2">';
+            secondHeaderRow.find("th").each(function (colIndex, col) {
+              var colLetter = String.fromCharCode(65 + colIndex); // Convert index to letter (A, B, C, etc.)
+              var colXML = '<c t="inlineStr" r="' + colLetter + '2">';
+              colXML += "<is><t>";
+              colXML += $(col).text();
+              colXML += "</t></is></c>";
+              rowXML += colXML;
+            });
+            rowXML += "</row>";
+            newHeaderXML += rowXML;
+
+            // Insert the new second header row before the first data row
+            var $firstRow = $sheet.find('row[r="1"]');
+            $firstRow.after(newHeaderXML);
+            var globalIndex = 0;
+            $sheet.find("row").each(function () {
+              var $row = $(this);
+              var currentRowIndex = parseInt($row.attr("r"));
+              globalIndex += currentRowIndex;
+              if (globalIndex > 1) {
+                if (globalIndex == 3) {
+                  currentRowIndex = 1;
+                }
+                $row.attr("r", currentRowIndex + 1);
+                $row.find("c").each(function () {
+                  var $col = $(this);
+                  var colRef = $col.attr("r");
+                  var colLetter = colRef.match(/[A-Z]+/)[0];
+                  $col.attr("r", colLetter + (currentRowIndex + 1));
+                });
+              }
+            });
+          },
+        },
+      ],
+    });
